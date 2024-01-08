@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
-from models import Item, SignUp, Login, Tracker, TrackerDelete
+from models import Item, SignUp, Signin, Tracker, TrackerDelete
 import sqlite3
 import bcrypt
 from typing import List
@@ -14,7 +14,8 @@ app = FastAPI()
 
 DATABASE_FILE = "data.db"
 
-locale.setlocale(locale.LC_ALL, 'id_ID.UTF-8')
+locale.setlocale(locale.LC_ALL, "id_ID.UTF-8")
+
 
 def get_database_connection():
     try:
@@ -81,14 +82,12 @@ def insert_tracked_coins(conn, tracked_coins):
         exchange_rate = get_exchange_rate()
         for coin in tracked_coins:
             cursor.execute(
-                "INSERT INTO tracked_coins (id, name, priceIdn) VALUES (?, ?, ?)",
+                "INSERT INTO tracked_coins (name, priceIdn) VALUES (?, ?)",
                 (
-                    coin["id"],
                     coin["name"],
                     float(coin.get("priceUsd", 0)) * exchange_rate,
                 ),
             )
-
         conn.commit()
     except sqlite3.Error as e:
         print(f"Error inserting tracked coins: {e}")
@@ -97,7 +96,7 @@ def insert_tracked_coins(conn, tracked_coins):
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World", "Hello": "World"}
+    return {"Hello": "World"}
 
 
 @app.get("/user_list", response_model=List[Item])
@@ -120,7 +119,7 @@ def read_item():
         conn.close()
 
 
-@app.post("/sign_up/", response_model=Item)
+@app.post("/sign_up/", response_model=dict)
 def sign_up(item: SignUp):
     if item.password != item.confirm_password:
         raise HTTPException(
@@ -146,7 +145,12 @@ def sign_up(item: SignUp):
         )
         result = cursor.fetchone()
 
-        return {"id": result[0], "email": result[1], "password": result[2]}
+        return {
+            "message": "user successfully registered",
+            "id": result[0],
+            "email": result[1],
+            "password": result[2],
+        }
     except sqlite3.Error as e:
         print(f"Error executing SQL query: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
@@ -154,8 +158,8 @@ def sign_up(item: SignUp):
         conn.close()
 
 
-@app.post("/login/", response_model=dict)
-def login(item: Login):
+@app.post("/signin/", response_model=dict)
+def signin(item: Signin):
     conn = get_database_connection()
     cursor = conn.cursor()
     try:
@@ -174,7 +178,7 @@ def login(item: Login):
         ver = verify_jwt_token(access_token)
 
         return {
-            "message": "Login Success",
+            "message": "user successfully signin",
             "access_token": access_token,
             "token_type": "bearer",
             "ver": ver,
@@ -186,11 +190,12 @@ def login(item: Login):
         conn.close()
 
 
-@app.delete("/logout/")
-def logout(
+@app.delete("/signout/")
+def signout(
     current_user: str = Depends(authenticate_token),
 ):
-    return {"message": "Logout success", "user": current_user}
+    return {"message": "user successfully signout", "user": current_user}
+
 
 @app.get("/tracked_coins/", response_model=dict)
 def list_tracked_coins(current_user: str = Depends(authenticate_token)):
@@ -204,7 +209,7 @@ def list_tracked_coins(current_user: str = Depends(authenticate_token)):
         raise HTTPException(status_code=500, detail="Internal Server Error")
     finally:
         conn.close()
-    
+
     return {
         "message": "Data Restored Successful",
         "user": current_user,
@@ -213,6 +218,7 @@ def list_tracked_coins(current_user: str = Depends(authenticate_token)):
             for result in results
         ],
     }
+
 
 @app.get("/refresh_db/", response_model=dict)
 def refresh_tracked_db(current_user: str = Depends(authenticate_token)):
@@ -251,8 +257,7 @@ def add_coin(item: Tracker, current_user: str = Depends(authenticate_token)):
         cursor.execute(
             "INSERT INTO tracked_coins (name, priceIdn) VALUES (?, ?)", (item.name,item.priceIdn,)
         )
-        
-        conn.commit()
+
         return {
             "message": "Coin Added",
             "name": item.name,
@@ -265,21 +270,16 @@ def add_coin(item: Tracker, current_user: str = Depends(authenticate_token)):
     finally:
         conn.close()
 
+
 @app.delete("/remove_coin/", response_model=dict)
 def remove_coin(item: TrackerDelete, current_user: str = Depends(authenticate_token)):
     conn = get_database_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute(
-            "DELETE FROM tracked_coins WHERE name=?", (item.name,)
-        )
+        cursor.execute("DELETE FROM tracked_coins WHERE name=?", (item.name,))
 
         conn.commit()
-        return {
-            "message": "Coin Removed",
-            "name": item.name,
-            "user": current_user
-        }
+        return {"message": "Coin Removed", "name": item.name, "user": current_user}
     except sqlite3.Error as e:
         print(f"Error executing SQL query: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")

@@ -10,7 +10,7 @@ class SignUp(BaseModel):
     password: str
     confirm_password: str
 
-class Login(BaseModel):
+class Signin(BaseModel):
     email: str
     password: str
 

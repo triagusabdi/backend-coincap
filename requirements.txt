@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-locale
 PyJWT
 requests
 sqlite3

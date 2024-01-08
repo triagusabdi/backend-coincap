@@ -4,10 +4,9 @@
 
     python -m venv venv
 
-## To Activate a virtual environment or To Deactivate 
+## To Activate a virtual environment
 
     venv\Scripts\activate
-    deactivate
 
 ## Install Requirements
 

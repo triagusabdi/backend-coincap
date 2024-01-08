@@ -12,6 +12,10 @@
 
     pip install -r requirements.txt
 
+## Run FastAPI application 
+
+    uvicorn main:app --reload
+
 # REST API
 
 

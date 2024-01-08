@@ -1,4 +1,4 @@
-# REST API example application
+# JSON REST API Coincap Using FastAPI
 
 ## Run
 

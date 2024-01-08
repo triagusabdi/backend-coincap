@@ -1,5 +1,11 @@
 # JSON REST API Coincap Using FastAPI
 
+To get started:
+
+## Clone the repository
+
+    https://github.com/triagusabdi/backend-coincap.git
+
 ## Run to Create a virtual environment
 
     python -m venv venv

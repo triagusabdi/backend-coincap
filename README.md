@@ -1,350 +1,241 @@
 # REST API example application
 
-This is a bare-bones example of a Sinatra application providing a REST
-API to a DataMapper-backed model.
+## Run
 
-The entire application is contained within the `app.rb` file.
+    python -m venv venv
 
-`config.ru` is a minimal Rack configuration for unicorn.
+## Run 
 
-`run-tests.sh` runs a simplistic test and generates the API
-documentation below.
+    venv\Scripts\activate
 
-It uses `run-curl-tests.rb` which runs each command defined in
-`commands.yml`.
+## Install Requirements
 
-## Install
-
-    bundle install
-
-## Run the app
-
-    unicorn -p 7000
-
-## Run the tests
-
-    ./run-tests.sh
+    pip install -r requirements.txt
 
 # REST API
 
-The REST API to the example app is described below.
 
-## Get list of Things
-
-### Request
-
-`GET /thing/`
-
-    curl -i -H 'Accept: application/json' http://localhost:7000/thing/
-
-### Response
-
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:30 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 2
-
-    []
-
-## Create a new Thing
+## SignUp
 
 ### Request
 
-`POST /thing/`
+    POST http://127.0.0.1:8000/sign_up/
 
-    curl -i -H 'Accept: application/json' -d 'name=Foo&status=new' http://localhost:7000/thing
+### Body raw
+
+    {
+      "email": "agus22@agus.asdcom",
+      "password": "password",
+      "confirm_password": "password"
+    }
 
 ### Response
 
-    HTTP/1.1 201 Created
-    Date: Thu, 24 Feb 2011 12:36:30 GMT
-    Status: 201 Created
-    Connection: close
-    Content-Type: application/json
-    Location: /thing/1
-    Content-Length: 36
+    {
+        "message": "user successfully registered",
+        "id": 13,
+        "email": "agus22@agus.asdcom",
+        "password": "$2b$12$E5.hNwThEEXszt07JxolI.s6tdhSzM3O29fc6sfssSf1ScBMe65we"
+    }
 
-    {"id":1,"name":"Foo","status":"new"}
-
-## Get a specific Thing
+## SignIn
 
 ### Request
 
-`GET /thing/id`
+    POST http://127.0.0.1:8000/signin
 
-    curl -i -H 'Accept: application/json' http://localhost:7000/thing/1
+### Body raw
+
+    {
+      "email": "admin",
+      "password": "admin"
+    }
 
 ### Response
 
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:30 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 36
+    {
+        "message": "user successfully signin",
+        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTcwNDczNjY2OH0.cH9yISS0bqfTvA70PUPDFagfBeaLTJ2RWctNMVPpxJI",
+        "token_type": "bearer",
+        "ver": {
+            "sub": "admin",
+            "exp": 1704736668
+        }
+    }
 
-    {"id":1,"name":"Foo","status":"new"}
-
-## Get a non-existent Thing
+## SignOut
 
 ### Request
 
-`GET /thing/id`
+    DELETE http://127.0.0.1:8000/signout
 
-    curl -i -H 'Accept: application/json' http://localhost:7000/thing/9999
+### Headers
+    
+    Authorization: Bearer {token}
+    example:
 
-### Response
-
-    HTTP/1.1 404 Not Found
-    Date: Thu, 24 Feb 2011 12:36:30 GMT
-    Status: 404 Not Found
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 35
-
-    {"status":404,"reason":"Not found"}
-
-## Create another new Thing
-
-### Request
-
-`POST /thing/`
-
-    curl -i -H 'Accept: application/json' -d 'name=Bar&junk=rubbish' http://localhost:7000/thing
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTcwNDczNjIxNX0.QE_nH6oN_XyAkW2b5Tmdiw_gZfZRBfKTRVaRVH5gwnY
 
 ### Response
 
-    HTTP/1.1 201 Created
-    Date: Thu, 24 Feb 2011 12:36:31 GMT
-    Status: 201 Created
-    Connection: close
-    Content-Type: application/json
-    Location: /thing/2
-    Content-Length: 35
+    {
+        "message": "user successfully signout",
+        "user": "admin"
+    }
 
-    {"id":2,"name":"Bar","status":null}
+## List Tracked Coins
 
-## Get list of Things again
+### Request 
 
-### Request
+    GET http://127.0.0.1:8000/tracked_coins/
 
-`GET /thing/`
+### Headers
+    
+    Authorization: Bearer {token}
+    example:
 
-    curl -i -H 'Accept: application/json' http://localhost:7000/thing/
-
-### Response
-
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:31 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 74
-
-    [{"id":1,"name":"Foo","status":"new"},{"id":2,"name":"Bar","status":null}]
-
-## Change a Thing's state
-
-### Request
-
-`PUT /thing/:id/status/changed`
-
-    curl -i -H 'Accept: application/json' -X PUT http://localhost:7000/thing/1/status/changed
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTcwNDczNjIxNX0.QE_nH6oN_XyAkW2b5Tmdiw_gZfZRBfKTRVaRVH5gwnY
 
 ### Response
 
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:31 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 40
+    {
+        "message": "Data Restored Successful",
+        "user": "admin",
+        "data": [
+            {
+                "name": "Bitcoin",
+                "priceIdn": "Rp654.089.056,08"
+            },
+            {
+                "name": "Ethereum",
+                "priceIdn": "Rp32.983.872,99"
+            }, ...
 
-    {"id":1,"name":"Foo","status":"changed"}
 
-## Get changed Thing
+## Add Coin
 
-### Request
+### Request 
 
-`GET /thing/id`
+    POST http://127.0.0.1:8000/add_coin/
 
-    curl -i -H 'Accept: application/json' http://localhost:7000/thing/1
+### Headers
+    
+    Authorization: Bearer {token}
+    example:
 
-### Response
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTcwNDczNjIxNX0.QE_nH6oN_XyAkW2b5Tmdiw_gZfZRBfKTRVaRVH5gwnY
 
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:31 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 40
+### Body raw
 
-    {"id":1,"name":"Foo","status":"changed"}
-
-## Change a Thing
-
-### Request
-
-`PUT /thing/:id`
-
-    curl -i -H 'Accept: application/json' -X PUT -d 'name=Foo&status=changed2' http://localhost:7000/thing/1
+    {
+      "name": "Agus",
+      "priceIdn": 10000
+    }
 
 ### Response
 
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:31 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 41
+    {
+        "message": "Coin Added",
+        "name": "Agus",
+        "priceIdn": 10000.0,
+        "user": "admin"
+    }
 
-    {"id":1,"name":"Foo","status":"changed2"}
+## Remove Coin
 
-## Attempt to change a Thing using partial params
+### Request 
 
-### Request
+    DELETE http://127.0.0.1:8000/remove_coin/
 
-`PUT /thing/:id`
+### Headers
+    
+    Authorization: Bearer {token}
+    example:
 
-    curl -i -H 'Accept: application/json' -X PUT -d 'status=changed3' http://localhost:7000/thing/1
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTcwNDczNjIxNX0.QE_nH6oN_XyAkW2b5Tmdiw_gZfZRBfKTRVaRVH5gwnY
 
-### Response
+### Body raw
 
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:32 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 41
-
-    {"id":1,"name":"Foo","status":"changed3"}
-
-## Attempt to change a Thing using invalid params
-
-### Request
-
-`PUT /thing/:id`
-
-    curl -i -H 'Accept: application/json' -X PUT -d 'id=99&status=changed4' http://localhost:7000/thing/1
+    {
+      "name": "Agus"
+    }
 
 ### Response
 
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:32 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 41
+    {
+        "message": "Coin Removed",
+        "name": "Agus",
+        "user": "admin"
+    }
 
-    {"id":1,"name":"Foo","status":"changed4"}
+## Restored Tracked Coins
 
-## Change a Thing using the _method hack
+### Request 
 
-### Request
+    GET http://127.0.0.1:8000/refresh_db/
 
-`POST /thing/:id?_method=POST`
+### Headers
+    
+    Authorization: Bearer {token}
+    example:
 
-    curl -i -H 'Accept: application/json' -X POST -d 'name=Baz&_method=PUT' http://localhost:7000/thing/1
-
-### Response
-
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:32 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 41
-
-    {"id":1,"name":"Baz","status":"changed4"}
-
-## Change a Thing using the _method hack in the url
-
-### Request
-
-`POST /thing/:id?_method=POST`
-
-    curl -i -H 'Accept: application/json' -X POST -d 'name=Qux' http://localhost:7000/thing/1?_method=PUT
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTcwNDczNjIxNX0.QE_nH6oN_XyAkW2b5Tmdiw_gZfZRBfKTRVaRVH5gwnY
 
 ### Response
 
-    HTTP/1.1 404 Not Found
-    Date: Thu, 24 Feb 2011 12:36:32 GMT
-    Status: 404 Not Found
-    Connection: close
-    Content-Type: text/html;charset=utf-8
-    Content-Length: 35
+    {
+        "message": "Data Restored Successful",
+        "data": [
+            {
+                "name": "Bitcoin",
+                "priceIdn": "Rp685.518.746,66"
+            },
+            {
+                "name": "Ethereum",
+                "priceIdn": "Rp34.640.387,92"
+            },
 
-    {"status":404,"reason":"Not found"}
+# TESTS
+API tested using Postman
 
-## Delete a Thing
+## SignUp
+    PASS    Response status code is 200
+    PASS    Response has the required fields
+    PASS    Email is in a valid format
+    PASS    Password meets the required criteria
+    PASS    Content-Type header is application/json
 
-### Request
+## Signin
+    PASS    Response status code is 200
+    PASS    Response has the required fields
+    PASS    Access token is a non-empty string
+    PASS    Ver object is present and contains expected fields
+    PASS    Expiration time is in a valid date format
 
-`DELETE /thing/id`
+## Signout
+    PASS    Response status code is 200
+    PASS    Response has the required fields - message and user
+    PASS    Message is a non-empty string
+    PASS    User is a non-empty string
+    PASS    Content-Type header is application/json
 
-    curl -i -H 'Accept: application/json' -X DELETE http://localhost:7000/thing/1/
+## List Tracked Coins
+    PASS    Response status code is 200
+    PASS    Response has the required fields - message, user, and data
+    PASS    Name and priceIdn are non-empty strings
+    PASS    Content-Type is application/json
+    PASS    Data array is present and contains at least one element
 
-### Response
+## Add Coins
+    PASS    Response status code is 200
+    PASS    Response has the required fields
+    PASS    Name is a non-empty string
+    PASS    PriceIdn is a non-negative integer
+    PASS    User is not null or empty string
 
-    HTTP/1.1 204 No Content
-    Date: Thu, 24 Feb 2011 12:36:32 GMT
-    Status: 204 No Content
-    Connection: close
-
-
-## Try to delete same Thing again
-
-### Request
-
-`DELETE /thing/id`
-
-    curl -i -H 'Accept: application/json' -X DELETE http://localhost:7000/thing/1/
-
-### Response
-
-    HTTP/1.1 404 Not Found
-    Date: Thu, 24 Feb 2011 12:36:32 GMT
-    Status: 404 Not Found
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 35
-
-    {"status":404,"reason":"Not found"}
-
-## Get deleted Thing
-
-### Request
-
-`GET /thing/1`
-
-    curl -i -H 'Accept: application/json' http://localhost:7000/thing/1
-
-### Response
-
-    HTTP/1.1 404 Not Found
-    Date: Thu, 24 Feb 2011 12:36:33 GMT
-    Status: 404 Not Found
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 35
-
-    {"status":404,"reason":"Not found"}
-
-## Delete a Thing using the _method hack
-
-### Request
-
-`DELETE /thing/id`
-
-    curl -i -H 'Accept: application/json' -X POST -d'_method=DELETE' http://localhost:7000/thing/2/
-
-### Response
-
-    HTTP/1.1 204 No Content
-    Date: Thu, 24 Feb 2011 12:36:33 GMT
-    Status: 204 No Content
-    Connection: close
-
-
+## Remove Coins
+    PASS    Response status code is 200
+    PASS    Response has the required fields - message, name, and user
+    PASS    Name is a non-empty string
+    PASS    User field should not be null or empty
+    PASS    Content-Type header is application/json

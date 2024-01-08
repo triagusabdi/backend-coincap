@@ -1,10 +1,10 @@
 # JSON REST API Coincap Using FastAPI
 
-## Run
+## Run to Create a virtual environment
 
     python -m venv venv
 
-## Run 
+## Run to Activate a virtual environment
 
     venv\Scripts\activate
 
